@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "mineryield": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mineryield-mcp"
+      ],
+      "env": {
+        "MINERYIELD_API_KEY": "${MINERYIELD_API_KEY}"
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+# Smithery configuration: https://smithery.ai/docs/build/project-config/smithery-yaml
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    required:
+      - mineryieldApiKey
+    properties:
+      mineryieldApiKey:
+        type: string
+        description: MinerYield Bearer API key created at https://mineryield.com/api while signed in.
+      mineryieldApiBaseUrl:
+        type: string
+        description: Optional API origin. Defaults to https://mineryield.com.
+  commandFunction: |-
+    (config) => ({
+      command: 'node',
+      args: ['dist/index.js'],
+      env: {
+        MINERYIELD_API_KEY: config.mineryieldApiKey,
+        ...(config.mineryieldApiBaseUrl
+          ? { MINERYIELD_API_BASE_URL: config.mineryieldApiBaseUrl }
+          : {}),
+      },
+    })
+  exampleConfig:
+    mineryieldApiKey: my_your_key_here

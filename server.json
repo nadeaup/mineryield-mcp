@@ -1,0 +1,62 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.nadeaup/mineryield-mcp",
+  "title": "MinerYield",
+  "description": "Home/small-biz ASIC profit with solar and battery. Estimates; not financial advice.",
+  "version": "1.0.1",
+  "websiteUrl": "https://mineryield.com/ai/",
+  "repository": {
+    "url": "https://github.com/nadeaup/mineryield-mcp",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "mineryield-mcp",
+      "version": "1.0.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "MINERYIELD_API_KEY",
+          "description": "Bearer API key created at https://mineryield.com/api while signed in.",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "MINERYIELD_API_BASE_URL",
+          "description": "Optional API origin. Defaults to https://mineryield.com.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        }
+      ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mineryield.com/mcp",
+      "headers": [
+        {
+          "name": "Authorization",
+          "description": "Bearer MinerYield API key (create one at https://mineryield.com/api). Sent as 'Bearer <key>'.",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string",
+          "value": "Bearer {api_key}",
+          "variables": {
+            "api_key": {
+              "description": "MinerYield API key",
+              "isRequired": true,
+              "isSecret": true,
+              "format": "string"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

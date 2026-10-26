@@ -1,0 +1,71 @@
+{
+  "name": "mineryield-mcp",
+  "version": "1.0.1",
+  "mcpName": "io.github.nadeaup/mineryield-mcp",
+  "private": false,
+  "type": "module",
+  "description": "MinerYield MCP server for home miners and small businesses: ASIC profitability with solar, battery, and grid leftover watts. For Claude, Cursor, ChatGPT, and other MCP clients.",
+  "license": "MIT",
+  "author": "Patrick Nadeau / Cutting Edge Ventures",
+  "homepage": "https://mineryield.com/ai/",
+  "bugs": {
+    "url": "https://github.com/nadeaup/mineryield-mcp/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nadeaup/mineryield-mcp.git"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "mineryield",
+    "asic",
+    "mining",
+    "bitcoin",
+    "solar",
+    "profitability",
+    "claude",
+    "cursor",
+    "chatgpt"
+  ],
+  "bin": {
+    "mineryield-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./server": "./dist/server.js",
+    "./http": "./dist/http.js",
+    "./client": "./dist/client.js",
+    "./config": "./dist/config.js",
+    "./tools": "./dist/tools.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "server.json",
+    "smithery.yaml"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.0",
+    "vitest": "^5.0.5"
+  }
+}

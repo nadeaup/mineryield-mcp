@@ -1,0 +1,29 @@
+{
+  "name": "mineryield",
+  "version": "1.0.1",
+  "description": "MinerYield MCP tools for ASIC catalog lookup, solar mining estimates, and profitability modeling. Estimates only; not investment, financial, or tax advice. Results vary with network difficulty, coin price, power cost, and hardware performance. Do your own research. Not ROI guarantees.",
+  "author": {
+    "name": "MinerYield"
+  },
+  "homepage": "https://mineryield.com/ai/",
+  "repository": "https://github.com/nadeaup/mineryield-mcp",
+  "keywords": [
+    "MinerYield",
+    "ASIC",
+    "solar mining",
+    "profitability"
+  ],
+  "variables": {
+    "type": "object",
+    "properties": {
+      "MINERYIELD_API_KEY": {
+        "type": "string",
+        "title": "MinerYield API key",
+        "description": "Bearer API key created at https://mineryield.com/api while signed in. Used as Authorization: Bearer. Never commit this value."
+      }
+    },
+    "required": [
+      "MINERYIELD_API_KEY"
+    ]
+  }
+}

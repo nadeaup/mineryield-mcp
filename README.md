@@ -73,6 +73,8 @@ export MINERYIELD_API_KEY="your-key"
 npm start
 ```
 
+> **`dist/` is not committed.** It is the compiled output of `src/` and is created by `npm run build` (`tsc`). On a fresh clone, `node dist/index.js` fails with "Cannot find module" until you build. `npm install` / `npm ci` runs the build automatically through the `prepare` script, and `npm publish` rebuilds through `prepublishOnly`. After editing `src/`, run `npm run build` again.
+
 ## Claude Desktop
 
 Add to `claude_desktop_config.json` (Claude → Settings → Developer):

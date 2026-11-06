@@ -2,25 +2,28 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.nadeaup/mineryield-mcp",
   "title": "MinerYield",
-  "description": "Home/small-biz ASIC profit with solar and battery. Estimates; not financial advice.",
+  "description": "Home/small-biz ASIC profit with solar and battery. Estimates; API key required.",
   "version": "1.0.1",
-  "websiteUrl": "https://mineryield.com/ai/",
+  "websiteUrl": "https://mineryield.com/ai",
   "repository": {
     "url": "https://github.com/nadeaup/mineryield-mcp",
-    "source": "github"
+    "source": "github",
+    "id": "1434579542"
   },
   "packages": [
     {
       "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "mineryield-mcp",
       "version": "1.0.1",
+      "runtimeHint": "npx",
       "transport": {
         "type": "stdio"
       },
       "environmentVariables": [
         {
           "name": "MINERYIELD_API_KEY",
-          "description": "Bearer API key created at https://mineryield.com/api while signed in.",
+          "description": "Bearer API key created at https://mineryield.com/api while signed in. Required for authenticated tools; never commit the value.",
           "isRequired": true,
           "isSecret": true,
           "format": "string"
@@ -42,14 +45,14 @@
       "headers": [
         {
           "name": "Authorization",
-          "description": "Bearer MinerYield API key (create one at https://mineryield.com/api). Sent as 'Bearer <key>'.",
+          "description": "Required. Create a key at https://mineryield.com/api while signed in. Hosted MCP is not keyless: unauthenticated requests return HTTP 401.",
           "isRequired": true,
           "isSecret": true,
           "format": "string",
           "value": "Bearer {api_key}",
           "variables": {
             "api_key": {
-              "description": "MinerYield API key",
+              "description": "MinerYield API key from https://mineryield.com/api",
               "isRequired": true,
               "isSecret": true,
               "format": "string"

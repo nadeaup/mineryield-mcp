@@ -4,3 +4,7 @@ dist
 .env
 .env.*
 *.tgz
+.mcp_publisher_token
+.mcpregistry_github_token
+.mcpregistry_registry_token
+.mcp-publisher/

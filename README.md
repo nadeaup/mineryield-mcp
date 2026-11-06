@@ -1,6 +1,6 @@
 # mineryield-mcp
 
-MinerYield is for **home miners and small businesses** with solar and battery in the numbers. This MCP server (and the hosted endpoint at `https://mineryield.com/mcp`) exposes the **same leftover-watt solar / battery / grid model** the site calculator already uses. Tools call `https://mineryield.com/api/v1/**`. They do not reimplement profitability math.
+MinerYield is for **home miners and small businesses** with solar and battery in the numbers. This MCP server exposes the **same leftover-watt solar / battery / grid model** the site calculator already uses. Tools call `https://mineryield.com/api/v1/**`. They do not reimplement profitability math.
 
 Ask an assistant:
 
@@ -13,11 +13,47 @@ Figures are model estimates from live market and weather inputs. They are estima
 
 Admin routes (`/api/v1/admin/*`) are not exposed.
 
-**Requirements:** Node.js 22 or newer.
+**Requirements:** Node.js 22 or newer. A MinerYield API key is required (this product is not keyless).
 
-**Hosted endpoint:** `https://mineryield.com/mcp` (Streamable HTTP, `Authorization: Bearer <key>`). **Setup page:** [mineryield.com/ai/](https://mineryield.com/ai/).
+**Setup page:** [mineryield.com/ai](https://mineryield.com/ai). **Keys:** [mineryield.com/api](https://mineryield.com/api) while signed in.
 
-**Registry name:** `io.github.nadeaup/mineryield-mcp`
+**Official registry name:** `io.github.nadeaup/mineryield-mcp` (npm package `mineryield-mcp@1.0.1`).
+
+## Two surfaces (same tools, different transport)
+
+| | Local stdio (this npm package) | Hosted Streamable HTTP |
+| --- | --- | --- |
+| How | `npx -y mineryield-mcp` | URL `https://mineryield.com/mcp` |
+| Auth | env `MINERYIELD_API_KEY` | header `Authorization: Bearer <key>` |
+| Runs where | Your machine (Node 22+) | MinerYield (`mcp` function) |
+| Without a key | Authenticated tools fail locally with HTTP 401 and **do not call** the API. Public REST tools still work over stdio. | **HTTP 401** `Unauthorized: No API key provided`. Hosted MCP is not keyless, including for tools that are public on REST. |
+| Telemetry | This package does not add telemetry or phoning home. Stdio only contacts `MINERYIELD_API_BASE_URL` (default `https://mineryield.com`) when a tool runs. | Site analytics are unrelated to this package. |
+
+Local `--http` (`npx -y mineryield-mcp --http --port 3333`) binds **127.0.0.1** for debugging a hosted-style client. It is not the production endpoint.
+
+## API key and limits
+
+Create a Bearer API key while signed in at [mineryield.com/api](https://mineryield.com/api). Never commit it. Optional: `MINERYIELD_API_BASE_URL` (defaults to `https://mineryield.com`).
+
+Existing product limits (not changed by this package):
+
+- **Free quota:** 25 API calls on a rolling 30-day window from first request (live Free plan).
+- **Keys:** maximum 5 active keys per account.
+- **Hosted MCP instance:** 60 requests/min per key and 30 requests/min per IP.
+- Tool calls then consume the usual monthly API quota on `/api/v1`.
+
+Setup walkthrough: [Use MinerYield in your AI assistant](https://mineryield.com/ai).
+
+## Discovery
+
+- Site: https://mineryield.com/ai
+- Hosted MCP: https://mineryield.com/mcp
+- Discovery JSON: https://mineryield.com/.well-known/mcp.json (same as `/mcp-discovery.json`)
+- llms.txt: https://mineryield.com/llms.txt
+- OpenAPI: https://mineryield.com/swagger.yaml
+- Official MCP Registry name: `io.github.nadeaup/mineryield-mcp` (publication is a separate one-time human action; see [docs/official-registry.md](docs/official-registry.md))
+- Glama: already listed at https://glama.ai/mcp/servers/nadeaup/mineryield-mcp
+- PulseMCP: manual submissions are paused pending official ingest; **do not submit** a duplicate listing
 
 ## What's supported (existing site calculator)
 
@@ -35,15 +71,7 @@ On `GET /api/v1/miners` / `list_miners`, query values override the API-key owner
 
 `get_solar_forecast` is weather-based array production only (`zipCode` + `capacityW`). Pair it with `list_miners` or `calculate_profitability` for miner profit.
 
-## API key
-
-Create a Bearer API key while signed in at [mineryield.com/api](https://mineryield.com/api). Set it as `MINERYIELD_API_KEY`. Never commit it.
-
-Optional: `MINERYIELD_API_BASE_URL` (defaults to `https://mineryield.com`).
-
-Setup walkthrough: [Use MinerYield in your AI assistant](https://mineryield.com/ai/).
-
-## npx (recommended)
+## npx (recommended local stdio)
 
 ```bash
 export MINERYIELD_API_KEY="your-key"
@@ -150,10 +178,12 @@ OpenAPI remains the HTTP contract: [mineryield.com/swagger.yaml](https://mineryi
 | `get_market` | `GET /api/v1/market` | Bearer API key | Live spot prices (BTC, BCH, LTC, DOGE, ZEC, KAS, CKB, RXD, SC, DCR, DASH, GRIN, ALPH, XTM, ETC, XMR, ALEO, HNS, BTCB2, KDA, NEXA, XP, QUAI, ARRR, OCTA, ETHW, QKC, MWC, SCP) |
 | `get_solar_forecast` | `GET /api/v1/solar-forecast` | Bearer API key | 7-day solar production estimate (`zipCode`, `capacityW`) |
 | `get_difficulty_prediction` | `GET /api/v1/difficulty-prediction` | Bearer API key | 7-day difficulty trend (`coin`, default BTC; allowlist is the supported market symbol set) |
-| `list_catalog_miners` | `GET /api/v1/catalog/miners` | Public | Specs-only ASIC catalog (Kadena, NexaPow, XPHash, ALEO, ALPH, SHA-256 QUAI-capable SKUs). Goldshell HS-Lite is one row with dual `modes` (Blake2B-SHA3/HNS and Blake2B SC/BTCB2). |
-| `list_mrr_rates` | `GET /api/v1/mrr-rates` | Public | Cached Mining Rig Rentals algorithm rates. NexaPow maps to `nexapow`. SHA3X, zkSNARK, Blake256R14, Kadena, and XPHash have no primary book. |
-| `list_nicehash_rates` | `GET /api/v1/nicehash-rates` | Public | Cached NiceHash paying rates (sat/H/day). SHA3X, zkSNARK, Blake256R14, Kadena, and XPHash have no NiceHash book. |
-| `get_market_data` | `GET /api/v1/market-data` | Public | Full market payload used by the web app (includes KDA/NEXA/XP/QUAI/ARRR/OCTA/ETHW/QKC/MWC/SCP prices + nethash/difficulty; new-coin and XP fields may be omitted) |
+| `list_catalog_miners` | `GET /api/v1/catalog/miners` | Public on REST | Specs-only ASIC catalog (Kadena, NexaPow, XPHash, ALEO, ALPH, SHA-256 QUAI-capable SKUs). Goldshell HS-Lite is one row with dual `modes` (Blake2B-SHA3/HNS and Blake2B SC/BTCB2). |
+| `list_mrr_rates` | `GET /api/v1/mrr-rates` | Public on REST | Cached Mining Rig Rentals algorithm rates. NexaPow maps to `nexapow`. SHA3X, zkSNARK, Blake256R14, Kadena, and XPHash have no primary book. |
+| `list_nicehash_rates` | `GET /api/v1/nicehash-rates` | Public on REST | Cached NiceHash paying rates (sat/H/day). SHA3X, zkSNARK, Blake256R14, Kadena, and XPHash have no NiceHash book. |
+| `get_market_data` | `GET /api/v1/market-data` | Public on REST | Full market payload used by the web app (includes KDA/NEXA/XP/QUAI/ARRR/OCTA/ETHW/QKC/MWC/SCP prices + nethash/difficulty; new-coin and XP fields may be omitted) |
+
+"Public on REST" means those HTTP routes do not require a key when called directly. **Hosted MCP still requires** `Authorization: Bearer <key>` for every tool. Local stdio can call public REST tools without `MINERYIELD_API_KEY`.
 
 ### `calculate_profitability` body
 
@@ -194,19 +224,21 @@ Matches `POST /api/v1/calculator` in the [OpenAPI spec](https://mineryield.com/s
 ```bash
 npm install
 npm test
+npm run typecheck
+npm run validate:registry
 ```
 
 ## Hosted Streamable HTTP
 
 Production endpoint: `https://mineryield.com/mcp`
 
-Bearer API-key auth uses the same key store as `/api/v1`. Admin routes and tools are not mounted. Per-key and per-IP rate limits apply at this surface; tool calls then consume the usual monthly API quota on the REST API.
+This is **not** the npm process. Send `Authorization: Bearer <key>` on every request. Live unauthenticated calls return HTTP 401. Bearer API-key auth uses the same key store as `/api/v1`. Admin routes and tools are not mounted. Per-key (60/min) and per-IP (30/min) rate limits apply at this surface; tool calls then consume the usual monthly API quota on the REST API.
 
-Discovery:
+## Official MCP Registry
 
-- https://mineryield.com/llms.txt
-- https://mineryield.com/.well-known/mcp.json (same document as `/mcp-discovery.json`)
-- https://mineryield.com/ai/
+`server.json` in this repo is the official-registry contract (`$schema` 2025-12-11). npm `mineryield-mcp@1.0.1` already ships `mcpName` `io.github.nadeaup/mineryield-mcp`. Do not bump the npm version for registry publication.
+
+Preflight and the single human `mcp-publisher` action: [docs/official-registry.md](docs/official-registry.md).
 
 ## License
 

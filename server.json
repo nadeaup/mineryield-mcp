@@ -3,7 +3,7 @@
   "name": "io.github.nadeaup/mineryield-mcp",
   "title": "MinerYield",
   "description": "Home/small-biz ASIC profit with solar and battery. Hosted MCP keyless catalog 20/min+200/day; paid REST 25/1k/10k/50k. Estimates; not financial advice. x402 not enabled.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "websiteUrl": "https://mineryield.com/ai/",
   "repository": {
     "url": "https://github.com/nadeaup/mineryield-mcp",
@@ -13,7 +13,7 @@
     {
       "registryType": "npm",
       "identifier": "mineryield-mcp",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "transport": {
         "type": "stdio"
       },

@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.nadeaup/mineryield-mcp",
   "title": "MinerYield",
-  "description": "Home/small-biz ASIC profit with solar and battery. Estimates; not financial advice.",
+  "description": "Home/small-biz ASIC profit with solar and battery. Hosted MCP keyless catalog 20/min+200/day; paid REST 25/1k/10k/50k. Estimates; not financial advice. x402 not enabled.",
   "version": "1.0.1",
   "websiteUrl": "https://mineryield.com/ai/",
   "repository": {
@@ -42,8 +42,8 @@
       "headers": [
         {
           "name": "Authorization",
-          "description": "Bearer MinerYield API key (create one at https://mineryield.com/api). Sent as 'Bearer <key>'.",
-          "isRequired": true,
+          "description": "Bearer MinerYield API key (create at https://mineryield.com/api with verified email). Required for private tools; keyless catalog subset allows 20/UTC min + 200/UTC day without a key.",
+          "isRequired": false,
           "isSecret": true,
           "format": "string",
           "value": "Bearer {api_key}",

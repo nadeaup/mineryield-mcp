@@ -37,7 +37,7 @@ On `GET /api/v1/miners` / `list_miners`, query values override the API-key owner
 
 ## API key
 
-Create a Bearer API key while signed in at [mineryield.com/api](https://mineryield.com/api). Set it as `MINERYIELD_API_KEY`. Never commit it.
+Create a Bearer API key while signed in at [mineryield.com/api](https://mineryield.com/api) with a **verified email** (create/list/revoke/rotate use a Firebase ID token; `email_not_verified` → 403). Set it as `MINERYIELD_API_KEY`. Never commit it.
 
 Optional: `MINERYIELD_API_BASE_URL` (defaults to `https://mineryield.com`).
 
@@ -136,9 +136,18 @@ Use Streamable HTTP:
 - Auth: `Authorization: Bearer <MINERYIELD_API_KEY>`
 - Discovery: `https://mineryield.com/.well-known/mcp.json`
 
-ChatGPT (Connectors / custom MCP), Claude remote MCP, and Grok custom connectors all accept that URL plus the Bearer header. Public tools still require the key on the hosted endpoint so per-key rate limits and quotas apply.
+ChatGPT (Connectors / custom MCP), Claude remote MCP, and Grok custom connectors all accept that URL plus the Bearer header. Private tools require a Bearer key. A small keyless catalog subset (`list_catalog_miners`, `list_mrr_rates`, `list_nicehash_rates`, `get_market_data` plus initialize/tools/list/ping) shares **20/UTC minute and 200/UTC day** (Firestore, not per IP). Quota denial never falls back to anonymous.
 
 OpenAPI remains the HTTP contract: [mineryield.com/swagger.yaml](https://mineryield.com/swagger.yaml).
+
+
+## Limits and errors
+
+- **Keyless hosted MCP:** 20 requests / UTC minute and 200 / UTC day shared (Firestore). Tools: `list_catalog_miners`, `list_mrr_rates`, `list_nicehash_rates`, `get_market_data` (+ initialize / tools/list / ping).
+- **Free plan:** 25 REST API calls / rolling 30 days (keyed MCP tools consume the same quota).
+- **Paid:** 1,000 / 10,000 / 50,000 (Hobbyist / Pro / Expert). Hosted MCP also rate-limits 60/min per key and 30/min per address (per instance). Max 5 active keys.
+- **x402:** not enabled.
+- **Errors:** missing/invalid Bearer → 401; key create without verified email → 403 `email_not_verified`; over quota → 429 `{"error":"Quota Exceeded","code":"quota_exceeded","remaining","limit","resetAt","retryAfterSeconds","period"}` with `Retry-After` / `RateLimit-*` headers.
 
 ## Tools
 
@@ -200,7 +209,7 @@ npm test
 
 Production endpoint: `https://mineryield.com/mcp`
 
-Bearer API-key auth uses the same key store as `/api/v1`. Admin routes and tools are not mounted. Per-key and per-IP rate limits apply at this surface; tool calls then consume the usual monthly API quota on the REST API.
+Bearer API-key auth uses the same key store as `/api/v1` for private tools. Admin routes and tools are not mounted. Keyless catalog subset uses the shared 20/min + 200/day anonymous budget. Per-key and per-address rate limits apply for authenticated traffic; keyed tool calls consume the rolling REST quota (25 free / paid tiers above).
 
 Discovery:
 

@@ -205,6 +205,20 @@ npm install
 npm test
 ```
 
+## Releasing
+
+Publish **npm first**, then the official MCP Registry.
+
+1. Bump the same version in `package.json` and `server.json` (including
+   `packages[0].version`). `mcpName` / `name` stay `io.github.nadeaup/mineryield-mcp`.
+2. `npm publish` from a trusted machine (runs `npm run build` via `prepublishOnly`).
+3. Push a `v*` tag, create a GitHub Release, or run **Actions → Publish to MCP Registry**
+   on `main`. That workflow uses GitHub OIDC (`mcp-publisher login github-oidc`); it does
+   not need a personal GitHub token and does not republish npm.
+
+If the Registry already has that version, the workflow treats it as success.
+See [RELEASING.md](RELEASING.md).
+
 ## Hosted Streamable HTTP
 
 Production endpoint: `https://mineryield.com/mcp`

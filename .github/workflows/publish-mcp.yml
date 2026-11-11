@@ -1,0 +1,136 @@
+# Publish server.json to the official MCP Registry.
+# Auth: GitHub Actions OIDC (mcp-publisher login github-oidc). No PAT or stored tokens.
+# Docs: https://modelcontextprotocol.io/registry/github-actions
+# Namespace io.github.nadeaup/* is proven by this repo's repository_owner claim.
+#
+# This workflow does not npm-publish. Publish mineryield-mcp to npm first so the
+# Registry can verify package.json#mcpName against server.json#name.
+name: Publish to MCP Registry
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-mcp-registry
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish server.json
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: ${{ (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || github.event_name == 'release' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) }}
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        # Do not use bash -e / set -e. Steps check exit codes explicitly.
+        shell: bash --noprofile --norc {0}
+    env:
+      # Pin to a release; bump MCP_PUBLISHER_VERSION and SHA256 together.
+      # SHA256 of mcp-publisher_linux_amd64.tar.gz from
+      # https://github.com/modelcontextprotocol/registry/releases/tag/v1.8.9
+      MCP_PUBLISHER_VERSION: v1.8.9
+      MCP_PUBLISHER_SHA256: 4d527ca8f1ced0394c962dc925c2a4a4addef441cbefd62501c875e9481823a8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Require matching versions
+        run: |
+          node -e '
+            const fs = require("fs");
+            const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            const srv = JSON.parse(fs.readFileSync("server.json", "utf8"));
+            const errors = [];
+            if (pkg.version !== srv.version) {
+              errors.push("server.json version " + srv.version + " does not match package.json version " + pkg.version);
+            }
+            if (pkg.mcpName !== srv.name) {
+              errors.push("server.json name " + srv.name + " does not match package.json mcpName " + pkg.mcpName);
+            }
+            const npmVersion = srv.packages && srv.packages[0] && srv.packages[0].version;
+            if (npmVersion && npmVersion !== srv.version) {
+              errors.push("server.json packages[0].version " + npmVersion + " does not match server.json version " + srv.version);
+            }
+            if (errors.length) {
+              for (const error of errors) console.error("::error::" + error);
+              process.exit(1);
+            }
+            console.log("version contract ok: " + srv.name + "@" + srv.version);
+          '
+          if [ $? -ne 0 ]; then
+            echo "::error::server.json version does not match package.json"
+            exit 1
+          fi
+
+      - name: Install mcp-publisher (checksum-pinned)
+        run: |
+          archive="$RUNNER_TEMP/mcp-publisher.tar.gz"
+          url="https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz"
+          echo "Downloading $url"
+          curl -fsSL -o "$archive" "$url"
+          if [ $? -ne 0 ]; then
+            echo "::error::Failed to download mcp-publisher ${MCP_PUBLISHER_VERSION}"
+            exit 1
+          fi
+          echo "${MCP_PUBLISHER_SHA256}  $archive" | sha256sum -c -
+          if [ $? -ne 0 ]; then
+            echo "::error::mcp-publisher checksum mismatch for ${MCP_PUBLISHER_VERSION}"
+            exit 1
+          fi
+          tar -xzf "$archive" -C "$RUNNER_TEMP" mcp-publisher
+          if [ $? -ne 0 ]; then
+            echo "::error::Failed to extract mcp-publisher"
+            exit 1
+          fi
+          chmod +x "$RUNNER_TEMP/mcp-publisher"
+          "$RUNNER_TEMP/mcp-publisher" --help >/dev/null
+          if [ $? -ne 0 ]; then
+            echo "::error::mcp-publisher binary is not executable"
+            exit 1
+          fi
+
+      - name: Validate server.json
+        run: |
+          "$RUNNER_TEMP/mcp-publisher" validate server.json
+          if [ $? -ne 0 ]; then
+            echo "::error::server.json failed mcp-publisher validate"
+            exit 1
+          fi
+
+      - name: Authenticate to MCP Registry (GitHub OIDC)
+        run: |
+          "$RUNNER_TEMP/mcp-publisher" login github-oidc
+          if [ $? -ne 0 ]; then
+            echo "::error::OIDC login failed. This job needs permissions.id-token: write."
+            exit 1
+          fi
+
+      - name: Publish server.json
+        run: |
+          output=$("$RUNNER_TEMP/mcp-publisher" publish 2>&1)
+          rc=$?
+          printf '%s\n' "$output"
+          if [ "$rc" -eq 0 ]; then
+            echo "Published to MCP Registry"
+            exit 0
+          fi
+          if printf '%s\n' "$output" | grep -qiE 'duplicate version|already published|already exists'; then
+            echo "Version already published; treating as success"
+            exit 0
+          fi
+          echo "::error::mcp-publisher publish failed"
+          exit "$rc"
